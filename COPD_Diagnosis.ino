@@ -1,68 +1,133 @@
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
 
-/*#include <SPI.h>
-#define BME_SCK 18
-#define BME_MISO 19
-#define BME_MOSI 23
-#define BME_CS 5*/
+// Set the LCD address to 0x27 for a 16 chars and 2 line display
+const float SensorOffset = 102.0;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+int D2=2;//RED LED
+int D3=4; //BUZZER
+int D5=3; //yellow led
+// the setup routine runs once when you press reset:
+void setup()
 
-#define SEALEVELPRESSURE_HPA (1013.25)
+{
+    // initialize serial communication at 9600 bits per second:
+  Serial.begin(9600) ;
+    // initialize the LCD
+    lcd.begin();
+  
+  pinMode(D2,OUTPUT);
+  pinMode(D3,OUTPUT);
+  pinMode(D5,OUTPUT);
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("  WELCOME TO  ");
+   lcd.setCursor(0,1);
+  lcd.print("  MAKER.PRO  ");
+  delay(2000);
+  lcd.clear();
+   lcd.setCursor(0,0);
+  lcd.print("BLOW The AIR ");
+   lcd.setCursor(0,1);
+  lcd.print("For Five Seconds");
+  delay(2000);
+  lcd.clear();
+  lcd.print("Start Blowing");
+  delay(5000);
+  
 
-Adafruit_BME280 bme; // I2C
-//Adafruit_BME280 bme(BME_CS); // hardware SPI
-//Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK); // software SPI
 
-unsigned long delayTime;
+    // Turn on the blacklight and print a message.
 
-void setup() {
-  Serial.begin(9600);
-  Serial.println(F("BME280 test"));
-
-  bool status;
-
-  // default settings
-  // (you can also pass in a Wire library object like &Wire2)
-  status = bme.begin(0x76);  
-  if (!status) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    while (1);
-  }
-
-  Serial.println("-- Default Test --");
-  delayTime = 1000;
-
-  Serial.println();
+ 
 }
 
+void loop()
+{
+  // read the input on analog pin 0:
+  float sensorValue = (analogRead(A0)-SensorOffset)/100.0; //Do maths for calibration
+  float total =(sensorValue*1000); //pascal
+  // print out the value you read:
+  //Serial.print("Air Pressure: ");  
+  //Serial.print(total,2);
+  //Serial.println(" Pa");
 
-void loop() { 
-  printValues();
-  delay(delayTime);
-}
-
-void printValues() {
-  Serial.print("Temperature = ");
-  Serial.print(bme.readTemperature());
-  Serial.println(" *C");
   
-  // Convert temperature to Fahrenheit
-  /*Serial.print("Temperature = ");
-  Serial.print(1.8 * bme.readTemperature() + 32);
-  Serial.println(" *F");*/
+  lcd.clear();
+  lcd.print("Spiromettery ");
+  lcd.setCursor(0,1);
+  lcd.print(total);
+  lcd.print("  pa");
+  if(total>6000) //total caliberated value is 6000 in my case
+  {
+    digitalWrite(D5, HIGH);
+        digitalWrite(D3, HIGH);
+    delay(1000);
+    digitalWrite(D5, LOW);
+        digitalWrite(D3, LOW);
+    delay(1000);
+    digitalWrite(D5, HIGH);
+        digitalWrite(D3, HIGH);
+    delay(1000);
+    digitalWrite(D5, LOW);
+        digitalWrite(D3, LOW);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("You are Normal 80%");
+    lcd.setCursor(0,1);
+    lcd.print(total);
+    lcd.print("  pa");
+    digitalWrite(D5, HIGH);
+    delay(10000);
+    digitalWrite(D5, LOW);
+    
+    
+    
+    }
+    else if(total>4580)
+    {
+        digitalWrite(D5, HIGH);
+        digitalWrite(D3, HIGH);
+    delay(1000);
+    digitalWrite(D5, LOW);
+        digitalWrite(D3, LOW);
+    delay(1000);
+    digitalWrite(D5, HIGH);
+        digitalWrite(D3, HIGH);
+    delay(1000);
+    digitalWrite(D5, LOW);
+        digitalWrite(D3, LOW);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("You are Normal 80%");
+    lcd.setCursor(0,1);
+    lcd.print(total);
+    lcd.print("  pa");
+     digitalWrite(D5, HIGH);
+    delay(10000);
+         digitalWrite(D5, LOW);
+   
+    }
+    else if (total>3200)
+    
+    {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("LOW 60% !");
+    lcd.setCursor(0,1);
+    lcd.print(total);
+    lcd.print("  pa");    
+    digitalWrite(D2, HIGH);
+    digitalWrite(D3, HIGH);
+    delay(10000);
+    digitalWrite(D2, LOW);
+    digitalWrite(D3, LOW);
+    
+    }
+    
   
-  Serial.print("Pressure = ");
-  Serial.print(bme.readPressure() / 100.0F);
-  Serial.println(" hPa");
-
-  Serial.print("Approx. Altitude = ");
-  Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-  Serial.println(" m");
-
-  Serial.print("Humidity = ");
-  Serial.print(bme.readHumidity());
-  Serial.println(" %");
-
-  Serial.println();
+  
+  delay(100);        // delay in between reads for stability
+    
 }
